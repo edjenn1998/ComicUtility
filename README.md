@@ -107,7 +107,4 @@ directory; build intermediates should be on a local filesystem under `/tmp`:
 Set `COMIC_BUILD_MODE=onedir` for an inspectable build. For a native build without
 the compatibility root, use `build.sh`; its ABI depends on the build computer.
 
-Third-party license notices are under `licenses/`. No public license has yet been
-assigned to the original application code; the owner can choose one before
-publishing. The source archive includes application code, tests, dependency
-versions and build instructions.
+Third-party license notices are in `licenses.tar.xz'. 
