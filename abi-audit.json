@@ -1,0 +1,1100 @@
+{
+  "architecture": "x86_64",
+  "minimum_glibc": "2.34",
+  "elf_files_checked": 273,
+  "files": [
+    {
+      "file": "ComicUtility-1.0-Linux-x86_64",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/Cryptodome/Cipher/_ARC4.abi3.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/Cryptodome/Cipher/_Salsa20.abi3.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/Cryptodome/Cipher/_chacha20.abi3.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/Cryptodome/Cipher/_pkcs1_decode.abi3.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/Cryptodome/Cipher/_raw_aes.abi3.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/Cryptodome/Cipher/_raw_aesni.abi3.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/Cryptodome/Cipher/_raw_arc2.abi3.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/Cryptodome/Cipher/_raw_blowfish.abi3.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/Cryptodome/Cipher/_raw_cast.abi3.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/Cryptodome/Cipher/_raw_cbc.abi3.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/Cryptodome/Cipher/_raw_cfb.abi3.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/Cryptodome/Cipher/_raw_ctr.abi3.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/Cryptodome/Cipher/_raw_des.abi3.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/Cryptodome/Cipher/_raw_des3.abi3.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/Cryptodome/Cipher/_raw_ecb.abi3.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/Cryptodome/Cipher/_raw_eksblowfish.abi3.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/Cryptodome/Cipher/_raw_ocb.abi3.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/Cryptodome/Cipher/_raw_ofb.abi3.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/Cryptodome/Hash/_BLAKE2b.abi3.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/Cryptodome/Hash/_BLAKE2s.abi3.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/Cryptodome/Hash/_MD2.abi3.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/Cryptodome/Hash/_MD4.abi3.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/Cryptodome/Hash/_MD5.abi3.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/Cryptodome/Hash/_RIPEMD160.abi3.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/Cryptodome/Hash/_SHA1.abi3.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/Cryptodome/Hash/_SHA224.abi3.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/Cryptodome/Hash/_SHA256.abi3.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/Cryptodome/Hash/_SHA384.abi3.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/Cryptodome/Hash/_SHA512.abi3.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/Cryptodome/Hash/_ghash_clmul.abi3.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/Cryptodome/Hash/_ghash_portable.abi3.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/Cryptodome/Hash/_keccak.abi3.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/Cryptodome/Hash/_poly1305.abi3.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/Cryptodome/Math/_modexp.abi3.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/Cryptodome/Protocol/_scrypt.abi3.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/Cryptodome/PublicKey/_curve25519.abi3.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/Cryptodome/PublicKey/_curve448.abi3.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/Cryptodome/PublicKey/_ec_ws.abi3.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/Cryptodome/PublicKey/_ed25519.abi3.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/Cryptodome/PublicKey/_ed448.abi3.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/Cryptodome/Util/_cpuid_c.abi3.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/Cryptodome/Util/_strxor.abi3.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/PIL/_avif.cpython-312-x86_64-linux-gnu.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PIL/_imaging.cpython-312-x86_64-linux-gnu.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PIL/_imagingcms.cpython-312-x86_64-linux-gnu.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/PIL/_imagingmath.cpython-312-x86_64-linux-gnu.so",
+      "minimum_glibc": "2.27"
+    },
+    {
+      "file": "_internal/PIL/_imagingtk.cpython-312-x86_64-linux-gnu.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/PIL/_webp.cpython-312-x86_64-linux-gnu.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/Qt/lib/libQt6Core.so.6",
+      "minimum_glibc": "2.28"
+    },
+    {
+      "file": "_internal/PySide6/Qt/lib/libQt6DBus.so.6",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/Qt/lib/libQt6EglFSDeviceIntegration.so.6",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/Qt/lib/libQt6EglFsKmsSupport.so.6",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/Qt/lib/libQt6Gui.so.6",
+      "minimum_glibc": "2.27"
+    },
+    {
+      "file": "_internal/PySide6/Qt/lib/libQt6Network.so.6",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/Qt/lib/libQt6OpenGL.so.6",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/Qt/lib/libQt6Svg.so.6",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/Qt/lib/libQt6WaylandClient.so.6",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/Qt/lib/libQt6WaylandEglClientHwIntegration.so.6",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/PySide6/Qt/lib/libQt6Widgets.so.6",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/Qt/lib/libQt6WlShellIntegration.so.6",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/PySide6/Qt/lib/libQt6XcbQpa.so.6",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/Qt/lib/libicui18n.so.73",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/Qt/lib/libicuuc.so.73",
+      "minimum_glibc": "2.27"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/egldeviceintegrations/libqeglfs-emu-integration.so",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/egldeviceintegrations/libqeglfs-kms-egldevice-integration.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/egldeviceintegrations/libqeglfs-x11-integration.so",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/generic/libqevdevkeyboardplugin.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/generic/libqevdevmouseplugin.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/generic/libqevdevtabletplugin.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/generic/libqevdevtouchplugin.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/generic/libqtuiotouchplugin.so",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/iconengines/libqsvgicon.so",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/imageformats/libqgif.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/imageformats/libqicns.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/imageformats/libqico.so",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/imageformats/libqjpeg.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/imageformats/libqsvg.so",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/imageformats/libqtga.so",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/imageformats/libqtiff.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/imageformats/libqwbmp.so",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/imageformats/libqwebp.so",
+      "minimum_glibc": "2.27"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/networkinformation/libqglib.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/networkinformation/libqnetworkmanager.so",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/platforminputcontexts/libcomposeplatforminputcontextplugin.so",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/platforminputcontexts/libibusplatforminputcontextplugin.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/platforms/libqeglfs.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/platforms/libqlinuxfb.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/platforms/libqminimal.so",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/platforms/libqminimalegl.so",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/platforms/libqoffscreen.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/platforms/libqvkkhrdisplay.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/platforms/libqwayland-egl.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/platforms/libqwayland-generic.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/platforms/libqxcb.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/platformthemes/libqgtk3.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/platformthemes/libqxdgdesktopportal.so",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/wayland-decoration-client/libadwaita.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/wayland-decoration-client/libbradient.so",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/wayland-graphics-integration-client/libdmabuf-server.so",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/wayland-graphics-integration-client/libdrm-egl-server.so",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/wayland-graphics-integration-client/libqt-plugin-wayland-egl.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/wayland-graphics-integration-client/libshm-emulation-server.so",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/wayland-graphics-integration-client/libvulkan-server.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/wayland-shell-integration/libfullscreen-shell-v1.so",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/wayland-shell-integration/libivi-shell.so",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/wayland-shell-integration/libqt-shell.so",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/wayland-shell-integration/libwl-shell-plugin.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/wayland-shell-integration/libxdg-shell.so",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/xcbglintegrations/libqxcb-egl-integration.so",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/PySide6/Qt/plugins/xcbglintegrations/libqxcb-glx-integration.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/PySide6/QtCore.abi3.so",
+      "minimum_glibc": "2.3.3"
+    },
+    {
+      "file": "_internal/PySide6/QtDBus.abi3.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/PySide6/QtGui.abi3.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/PySide6/QtNetwork.abi3.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/PySide6/QtWidgets.abi3.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/PySide6/libpyside6.abi3.so.6.8",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/_brotli.cpython-312-x86_64-linux-gnu.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/backports/zstd/_zstd.cpython-312-x86_64-linux-gnu.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/bcj/_bcj.cpython-312-x86_64-linux-gnu.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/charset_normalizer/cd.cpython-312-x86_64-linux-gnu.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/charset_normalizer/md.cpython-312-x86_64-linux-gnu.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/inflate64/_inflate64.cpython-312-x86_64-linux-gnu.so",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libX11.so.6.4.0",
+      "minimum_glibc": "2.26"
+    },
+    {
+      "file": "_internal/libXau.so.6.0.0",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/libXcomposite.so.1.0.0",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/libXcursor.so.1.0.2",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/libXdamage.so.1.1.0",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/libXdmcp.so.6.0.0",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/libXext.so.6.4.0",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libXfixes.so.3.1.0",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libXi.so.6.1.0",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libXinerama.so.1.0.0",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/libXrandr.so.2.2.0",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libXrender.so.1.3.0",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libacl.so.1.1.2253",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libarchive.so.13.6.2",
+      "minimum_glibc": "2.34"
+    },
+    {
+      "file": "_internal/libatk-1.0.so.0.23609.1",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/libatk-bridge-2.0.so.0.0.0",
+      "minimum_glibc": "2.7"
+    },
+    {
+      "file": "_internal/libatspi.so.0.0.1",
+      "minimum_glibc": "2.7"
+    },
+    {
+      "file": "_internal/libavahi-client.so.3.2.9",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/libavahi-common.so.3.5.4",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libblkid.so.1.1.0",
+      "minimum_glibc": "2.25"
+    },
+    {
+      "file": "_internal/libbrotlicommon.so.1.0.9",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/libbrotlidec.so.1.0.9",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libbrotlienc.so.1.0.9",
+      "minimum_glibc": "2.29"
+    },
+    {
+      "file": "_internal/libbsd.so.0.11.3",
+      "minimum_glibc": "2.25"
+    },
+    {
+      "file": "_internal/libbz2.so",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/libbz2.so.1.0.4",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/libcairo.so.2.11600.0",
+      "minimum_glibc": "2.29"
+    },
+    {
+      "file": "_internal/libcap.so.2.44",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libcolord.so.2.0.5",
+      "minimum_glibc": "2.29"
+    },
+    {
+      "file": "_internal/libcolordprivate.so.2.0.5",
+      "minimum_glibc": "2.29"
+    },
+    {
+      "file": "_internal/libcom_err.so.2.1",
+      "minimum_glibc": "2.17"
+    },
+    {
+      "file": "_internal/libcrypto.so.1.1",
+      "minimum_glibc": "2.25"
+    },
+    {
+      "file": "_internal/libcups.so.2",
+      "minimum_glibc": "2.17"
+    },
+    {
+      "file": "_internal/libdatrie.so.1.4.0",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libdbus-1.so.3.19.17",
+      "minimum_glibc": "2.17"
+    },
+    {
+      "file": "_internal/libdconf.so.1.0.0",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libdeflate.so.0",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libepoxy.so.0.0.0",
+      "minimum_glibc": "2.7"
+    },
+    {
+      "file": "_internal/libexpat.so.1.6.12",
+      "minimum_glibc": "2.25"
+    },
+    {
+      "file": "_internal/libexpatw.so.1.6.12",
+      "minimum_glibc": "2.25"
+    },
+    {
+      "file": "_internal/libffi.so.7.1.0",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libfontconfig.so.1.12.0",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libfreetype.so.6.17.4",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libfribidi.so.0.4.0",
+      "minimum_glibc": "2.3.4"
+    },
+    {
+      "file": "_internal/libgcc_s.so.1",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libgcrypt.so.20.2.8",
+      "minimum_glibc": "2.15"
+    },
+    {
+      "file": "_internal/libgdk-3.so.0.2404.20",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libgdk_pixbuf-2.0.so.0.4200.2",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libgdk_pixbuf_xlib-2.0.so.0.4000.2",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libgio-2.0.so.0.6600.8",
+      "minimum_glibc": "2.28"
+    },
+    {
+      "file": "_internal/libglib-2.0.so.0.6600.8",
+      "minimum_glibc": "2.28"
+    },
+    {
+      "file": "_internal/libgmodule-2.0.so.0.6600.8",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/libgmp.so.10.4.1",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libgnutls.so.30.29.1",
+      "minimum_glibc": "2.25"
+    },
+    {
+      "file": "_internal/libgobject-2.0.so.0.6600.8",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libgpg-error.so.0.29.0",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libgraphite2.so.3.2.1",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libgssapi_krb5.so.2.2",
+      "minimum_glibc": "2.27"
+    },
+    {
+      "file": "_internal/libgthread-2.0.so.0.6600.8",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/libgtk-3.so.0.2404.20",
+      "minimum_glibc": "2.29"
+    },
+    {
+      "file": "_internal/libharfbuzz.so.0.20704.0",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libhogweed.so.6.4",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libicui18n.so.67.1",
+      "minimum_glibc": "2.29"
+    },
+    {
+      "file": "_internal/libicuio.so.67.1",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libicutest.so.67.1",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libicutu.so.67.1",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libicuuc.so.67.1",
+      "minimum_glibc": "2.29"
+    },
+    {
+      "file": "_internal/libidn2.so.0.3.7",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libjbig.so.0",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/libjpeg.so.62.3.0",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libjson-glib-1.0.so.0.600.2",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/libk5crypto.so.3.1",
+      "minimum_glibc": "2.25"
+    },
+    {
+      "file": "_internal/libkeyutils.so.1.9",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libkrb5.so.3.3",
+      "minimum_glibc": "2.25"
+    },
+    {
+      "file": "_internal/libkrb5support.so.0.1",
+      "minimum_glibc": "2.25"
+    },
+    {
+      "file": "_internal/liblcms2.so.2.0.12",
+      "minimum_glibc": "2.29"
+    },
+    {
+      "file": "_internal/liblz4.so.1.9.3",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/liblzma.so.5.2.5",
+      "minimum_glibc": "2.17"
+    },
+    {
+      "file": "_internal/libmd.so.0.0.4",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libmount.so.1.1.0",
+      "minimum_glibc": "2.25"
+    },
+    {
+      "file": "_internal/libnettle.so.8.4",
+      "minimum_glibc": "2.17"
+    },
+    {
+      "file": "_internal/libnl-3.so.200.26.0",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libnl-genl-3.so.200.26.0",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/libp11-kit.so.0.3.0",
+      "minimum_glibc": "2.26"
+    },
+    {
+      "file": "_internal/libpango-1.0.so.0.4600.2",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libpangocairo-1.0.so.0.4600.2",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/libpangoft2-1.0.so.0.4600.2",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/libpcre.so.3.13.3",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libpcre2-8.so.0.10.1",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libpcreposix.so.3.13.3",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/libpixman-1.so.0.40.0",
+      "minimum_glibc": "2.29"
+    },
+    {
+      "file": "_internal/libpng16.so.16.37.0",
+      "minimum_glibc": "2.29"
+    },
+    {
+      "file": "_internal/libproxy.so.1.0.0",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libpsl.so.5.3.2",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/libpython3.12.so.1.0",
+      "minimum_glibc": "2.17"
+    },
+    {
+      "file": "_internal/librest-0.7.so.0.0.0",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/libselinux.so.1",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libsoup-2.4.so.1.11.0",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libsoup-gnome-2.4.so.1.11.0",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/libsqlite3.so.0.8.6",
+      "minimum_glibc": "2.29"
+    },
+    {
+      "file": "_internal/libssl.so.1.1",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libstdc++.so.6.0.28",
+      "minimum_glibc": "2.18"
+    },
+    {
+      "file": "_internal/libsystemd.so.0.30.0",
+      "minimum_glibc": "2.30"
+    },
+    {
+      "file": "_internal/libtasn1.so.6.6.0",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libthai.so.0.3.1",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libtiff.so.5.6.0",
+      "minimum_glibc": "2.29"
+    },
+    {
+      "file": "_internal/libudev.so.1.7.0",
+      "minimum_glibc": "2.30"
+    },
+    {
+      "file": "_internal/libunistring.so.2.1.0",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libuuid.so.1.3.0",
+      "minimum_glibc": "2.25"
+    },
+    {
+      "file": "_internal/libwayland-client.so.0.3.0",
+      "minimum_glibc": "2.28"
+    },
+    {
+      "file": "_internal/libwayland-cursor.so.0.0.0",
+      "minimum_glibc": "2.28"
+    },
+    {
+      "file": "_internal/libwayland-egl.so.1.0.0",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/libwebp.so.6.0.2",
+      "minimum_glibc": "2.29"
+    },
+    {
+      "file": "_internal/libxcb-cursor.so.0.0.0",
+      "minimum_glibc": "2.8"
+    },
+    {
+      "file": "_internal/libxcb-glx.so.0.0.0",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/libxcb-icccm.so.4.0.0",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/libxcb-image.so.0.0.0",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libxcb-keysyms.so.1.0.0",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/libxcb-randr.so.0.1.0",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/libxcb-render-util.so.0.0.0",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/libxcb-render.so.0.0.0",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libxcb-shape.so.0.0.0",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/libxcb-shm.so.0.0.0",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/libxcb-sync.so.1.0.0",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libxcb-util.so.1.0.0",
+      "minimum_glibc": "2.8"
+    },
+    {
+      "file": "_internal/libxcb-xfixes.so.0.0.0",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/libxcb-xkb.so.1.0.0",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libxcb.so.1.1.0",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libxkbcommon-x11.so.0.0.0",
+      "minimum_glibc": "2.17"
+    },
+    {
+      "file": "_internal/libxkbcommon.so.0.0.0",
+      "minimum_glibc": "2.17"
+    },
+    {
+      "file": "_internal/libxml2.so.2.9.10",
+      "minimum_glibc": "2.29"
+    },
+    {
+      "file": "_internal/libz.so.1.2.11",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/libzstd.so.1.4.8",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/pillow.libs/libXau-154567c4.so.6.0.0",
+      "minimum_glibc": "2.4"
+    },
+    {
+      "file": "_internal/pillow.libs/libavif-8a7f9d56.so.16.4.2",
+      "minimum_glibc": "2.27"
+    },
+    {
+      "file": "_internal/pillow.libs/libjpeg-31e2ca52.so.62.4.0",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/pillow.libs/liblcms2-dade1fbf.so.2.0.19",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/pillow.libs/liblzma-2be87c3e.so.5.8.3",
+      "minimum_glibc": "2.17"
+    },
+    {
+      "file": "_internal/pillow.libs/libopenjp2-b07f72ad.so.2.5.4",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/pillow.libs/libsharpyuv-0066295b.so.0.1.2",
+      "minimum_glibc": "2.27"
+    },
+    {
+      "file": "_internal/pillow.libs/libtiff-fc87e79d.so.6.2.0",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/pillow.libs/libwebp-51b0b3f7.so.7.2.0",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/pillow.libs/libwebpdemux-9fe2abcc.so.2.0.17",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/pillow.libs/libwebpmux-8fb1c9f6.so.3.1.2",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/pillow.libs/libxcb-ad31f5a3.so.1.1.0",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/pillow.libs/libzstd-44be1190.so.1.5.7",
+      "minimum_glibc": "2.14"
+    },
+    {
+      "file": "_internal/pypdfium2_raw/libpdfium.so",
+      "minimum_glibc": "2.16"
+    },
+    {
+      "file": "_internal/pyppmd/c/_ppmd.cpython-312-x86_64-linux-gnu.so",
+      "minimum_glibc": "2.17"
+    },
+    {
+      "file": "_internal/shiboken6/Shiboken.abi3.so",
+      "minimum_glibc": "2.2.5"
+    },
+    {
+      "file": "_internal/shiboken6/libshiboken6.abi3.so.6.8",
+      "minimum_glibc": "2.14"
+    }
+  ],
+  "limitations": "Symbol audit only. Host display libraries, CPU architecture and hardware access also affect compatibility."
+}
