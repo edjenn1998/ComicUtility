@@ -8,6 +8,9 @@ root = Path(sys.argv[1]).resolve()
 internal = root / "_internal"
 env = dict(os.environ, LD_LIBRARY_PATH=str(internal))
 failures = []
+for soname in ("libarchive.so.13", "libEGL.so.1", "libGL.so.1", "libGLX.so.0", "libGLdispatch.so.0"):
+    if not (internal / soname).is_file():
+        failures.append(f"Required portable library is absent from the bundle: {soname}")
 checked = 0
 for path in sorted(root.rglob("*")):
     if not path.is_file() or path.is_symlink():

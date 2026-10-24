@@ -2,28 +2,36 @@
 import ctypes.util
 import json
 import os
+import subprocess
 from pathlib import Path
 
 from PyInstaller.utils.hooks import collect_all
 
 project = Path(SPECPATH)
 build_root = Path(os.environ.get("COMIC_BUILD_ROOT", "/tmp/comic-utility-build"))
-library = os.environ.get("LIBARCHIVE") or ctypes.util.find_library("archive")
-if not library:
-    raise RuntimeError("Install the system libarchive shared library before building.")
-# Resolve sonames without depending on ldconfig output or pipefail/SIGPIPE behavior.
-if not Path(library).is_file():
-    import subprocess
-    for line in subprocess.check_output(["ldconfig", "-p"], text=True).splitlines():
-        if line.strip().startswith(library + " "):
-            library = line.split("=>", 1)[1].strip()
-            break
-if not Path(library).is_file():
-    raise RuntimeError(f"Cannot resolve libarchive: {library}")
+cache = subprocess.check_output(["ldconfig", "-p"], text=True).splitlines()
+
+
+def resolve_library(name):
+    library = ctypes.util.find_library(name)
+    if name == "archive":
+        library = os.environ.get("LIBARCHIVE") or library
+    if library and Path(library).is_file():
+        return library
+    for line in cache:
+        if library and line.strip().startswith(library + " "):
+            return line.split("=>", 1)[1].strip()
+    raise RuntimeError(f"Install the system {name} shared library before building.")
+
+
+# PyInstaller intentionally leaves these GLVND dispatch libraries to the host
+# unless explicitly requested. Bundle the vendor-neutral shims, not GPU drivers,
+# so Qt can start on minimal desktops too; GPU-specific implementations stay native.
+native = [resolve_library(name) for name in ("archive", "EGL", "GL", "GLX", "GLdispatch")]
 pil_data, pil_binaries, pil_hidden = collect_all("PIL")
 a = Analysis(
     [str(project / "launch.py")], pathex=[str(project)],
-    binaries=[(library, ".")] + pil_binaries,
+    binaries=[(library, ".") for library in native] + pil_binaries,
     datas=pil_data + [(str(project / "LICENSE"), "."),
                       (str(project / "packaging/appimage/io.github.edjenn1998.ComicUtility.svg"), ".")],
     hiddenimports=pil_hidden + ["pypdfium2_raw"],
