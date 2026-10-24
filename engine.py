@@ -28,12 +28,14 @@ import pypdfium2 as pdfium
 from pypdf import PdfReader, PdfWriter
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
+from version import VERSION
 
 FORMATS = {".cbz", ".zip", ".cbr", ".rar", ".cb7", ".7z", ".pdf"}
 IMAGES = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".tif", ".tiff", ".avif"}
 MAX_BYTES = 32 * 1024**3
 MAX_ENTRY = 2 * 1024**3
 MAX_FILES = 50000
+MAX_METADATA = 16 * 1024**2
 PDF_LOCK = threading.RLock()
 
 
@@ -58,6 +60,7 @@ def safe_name(name):
         or "\x00" in name
         or path.is_absolute()
         or ".." in path.parts
+        or str(path) == "."
         or re.match(r"^[A-Za-z]:", name)
     ):
         raise ValueError(f"Unsafe archive filename: {name!r}")
@@ -84,32 +87,68 @@ class Book:
         self.entries = []
         self.source = None
         self.metadata = None
+        self.original_order = ()
+        self._staged = {}
+        self._bytes = 0
 
     def close(self):
         self.temp.cleanup()
 
-    def stage(self, name, data=None, source=None):
+    def usage(self):
+        return len(self._staged), self._bytes
+
+    def register(self, path):
+        size = path.stat().st_size
+        self._staged[path] = size
+        self._bytes += size
+
+    def discard(self, path):
+        self._bytes -= self._staged.pop(path, 0)
+        path.unlink(missing_ok=True)
+
+    def prune(self, retained):
+        """Release files no longer referenced by the document or undo/redo history."""
+        keep = {p for e in retained for p in (e.path, e.pdf) if p}
+        for p in list(self._staged):
+            if p not in keep:
+                self.discard(p)
+
+    def stage(self, name, data=None, source=None, cancel=None):
+        name = safe_name(name)
         target = self.root / uuid.uuid4().hex
-        if source:
-            shutil.copyfile(source, target)
-        else:
-            target.write_bytes(data)
-        return Entry(safe_name(name), target)
+        count, used = self.usage()
+        if count >= MAX_FILES:
+            raise ValueError("Workspace exceeds the file-count limit (including undo history).")
+        try:
+            with target.open("wb") as out:
+                if source:
+                    with Path(source).open("rb") as src:
+                        copy_limited(src, out, min(MAX_ENTRY, MAX_BYTES - used), cancel)
+                else:
+                    if len(data) > min(MAX_ENTRY, MAX_BYTES - used):
+                        raise ValueError("Workspace size limit exceeded.")
+                    out.write(data)
+            self.register(target)
+            return Entry(name, target)
+        except BaseException:
+            target.unlink(missing_ok=True)
+            raise
 
     @classmethod
     def load(cls, source, cancel=None, progress=None):
         self = cls()
         self.source = Path(source)
         try:
+            check(cancel)
             if self.source.is_dir():
-                files = sorted(
-                    (
-                        p
-                        for p in self.source.rglob("*")
-                        if p.is_file() and not p.is_symlink()
-                    ),
-                    key=lambda p: natural(str(p.relative_to(self.source))),
-                )
+                files = []
+                for count, p in enumerate(self.source.rglob("*"), 1):
+                    check(cancel)
+                    if count > MAX_FILES:
+                        raise ValueError("Too many input entries.")
+                    if p.is_file() and not p.is_symlink():
+                        files.append(p)
+                files.sort(key=lambda p: natural(str(p.relative_to(self.source))))
                 total = 0
                 for i, p in enumerate(files):
                     check(cancel)
@@ -123,13 +162,13 @@ class Book:
                             "Input exceeds limits: 50,000 files / 32 GiB total / 2 GiB per file."
                         )
                     self.entries.append(
-                        self.stage(str(p.relative_to(self.source)), source=p)
+                        self.stage(str(p.relative_to(self.source)), source=p, cancel=cancel)
                     )
                     if progress:
                         progress(i + 1, len(files), p.name)
             elif self.source.suffix.lower() == ".pdf":
-                staged_pdf = self.root / "source.pdf"
-                shutil.copyfile(self.source, staged_pdf)
+                staged_pdf = self.stage("source.pdf", source=self.source, cancel=cancel).path
+                check(cancel)
                 reader = PdfReader(staged_pdf)
                 if reader.is_encrypted:
                     raise ValueError(
@@ -137,16 +176,21 @@ class Book:
                     )
                 if len(reader.pages) > MAX_FILES:
                     raise ValueError("Too many PDF pages.")
-                self.entries = [
-                    Entry(f"{i + 1:05d}.jpg", pdf=staged_pdf, page=i, original_index=i)
-                    for i in range(len(reader.pages))
-                ]
+                for i in range(len(reader.pages)):
+                    check(cancel)
+                    self.entries.append(Entry(f"{i + 1:05d}.jpg", pdf=staged_pdf, page=i, original_index=i))
+                    if progress:
+                        progress(i + 1, len(reader.pages), f"PDF page {i + 1}")
             else:
                 total = 0
                 seen = set()
                 with libarchive.file_reader(str(self.source)) as archive:
-                    for item in archive:
+                    for count, item in enumerate(archive, 1):
                         check(cancel)
+                        if count > MAX_FILES:
+                            raise ValueError("Too many archive entries.")
+                        if item.islnk or item.issym:
+                            raise ValueError("Archive contains a link or special file; only regular files are supported.")
                         if item.isdir:
                             continue
                         if not item.isfile:
@@ -154,9 +198,9 @@ class Book:
                                 "Archive contains a link or special file; only regular files are supported."
                             )
                         name = safe_name(item.pathname)
-                        if name in seen:
+                        if name.casefold() in seen:
                             raise ValueError(f"Duplicate archive entry: {name}")
-                        seen.add(name)
+                        seen.add(name.casefold())
                         if len(seen) > MAX_FILES:
                             raise ValueError("Too many archive entries.")
                         out = self.root / uuid.uuid4().hex
@@ -171,6 +215,7 @@ class Book:
                                         "Archive exceeds workspace size limits."
                                     )
                                 f.write(block)
+                        self.register(out)
                         self.entries.append(Entry(name, out))
                         if progress:
                             progress(len(self.entries), 0, name)
@@ -185,33 +230,85 @@ class Book:
                         raise ValueError(
                             "Multiple ComicInfo.xml files found; metadata is ambiguous."
                         )
+                    if e.path.stat().st_size > MAX_METADATA:
+                        raise ValueError("ComicInfo.xml exceeds the 16 MiB metadata limit.")
                     self.metadata = e.path.read_bytes()
             if not any(e.image for e in self.entries):
                 raise ValueError("No supported comic pages found.")
+            self.original_order = tuple(e.original_index for e in self.entries if e.image)
+            check(cancel)
             return self
         except BaseException:
             self.close()
             raise
 
-    def add(self, paths):
+    def add(self, paths, cancel=None, progress=None):
         existing = {e.name.casefold() for e in self.entries}
         result = []
-        for path in paths:
-            p = Path(path)
-            name = p.name
-            if p.stat().st_size > MAX_ENTRY:
-                raise ValueError("Added file exceeds 2 GiB limit.")
-            if p.suffix.lower() in IMAGES:
-                with Image.open(p) as im:
-                    im.verify()
-            if name.casefold() in existing:
-                n = 2
-                while name.casefold() in existing:
-                    name = f"{p.stem}_{n}{p.suffix}"
-                    n += 1
-            existing.add(name.casefold())
-            result.append(self.stage(name, source=p))
-        return result
+        try:
+            if len(self.entries) + len(paths) > MAX_FILES:
+                raise ValueError("Too many document entries.")
+            for i, path in enumerate(paths):
+                check(cancel)
+                p = Path(path)
+                name = p.name
+                if name.casefold() == "comicinfo.xml":
+                    raise ValueError("Use Metadata to edit ComicInfo.xml.")
+                if not p.is_file():
+                    raise ValueError(f"Not a regular file: {p}")
+                if name.casefold() in existing:
+                    n = 2
+                    while name.casefold() in existing:
+                        name = f"{p.stem}_{n}{p.suffix}"
+                        n += 1
+                existing.add(name.casefold())
+                entry = self.stage(name, source=p, cancel=cancel)
+                result.append(entry)
+                if entry.image:
+                    validate_image(entry.path, cancel)
+                if progress:
+                    progress(i + 1, len(paths), name)
+            check(cancel)
+            return result
+        except BaseException:
+            for e in result:
+                self.discard(e.path)
+            raise
+
+
+def copy_limited(src, out, limit, cancel=None):
+    size = 0
+    while True:
+        check(cancel)
+        block = src.read(1024 * 1024)
+        if not block:
+            break
+        size += len(block)
+        if size > limit:
+            raise ValueError("Workspace exceeds 32 GiB total / 2 GiB per file (including undo history).")
+        out.write(block)
+
+
+def validate_image(path, cancel=None):
+    """Check container integrity and fully decode every frame, not just headers."""
+    check(cancel)
+    with Image.open(path) as im:
+        im.verify()
+    with Image.open(path) as im:
+        frame = 0
+        while True:
+            check(cancel)
+            try:
+                im.seek(frame)
+            except EOFError:
+                break
+            im.load()
+            frame += 1
+
+
+def display_image(im):
+    """Return a Qt/PNG-safe image without changing the original staged bytes."""
+    return im.convert("RGBA" if "A" in im.getbands() or "transparency" in im.info else "RGB")
 
 
 def image_of(entry, dpi=150, preview=False):
@@ -241,21 +338,29 @@ def image_of(entry, dpi=150, preview=False):
     with Image.open(entry.path) as im:
         if preview:
             im.thumbnail((1600, 1600))
-        return ImageOps.exif_transpose(im).copy()
+        with ImageOps.exif_transpose(im) as oriented:
+            return display_image(oriented)
+
+
+def metadata_root(data):
+    parser = SafeET.DefusedXMLParser(target=ET.TreeBuilder(insert_comments=True, insert_pis=True))
+    return ET.fromstring(data, parser=parser)
 
 
 def metadata_values(book):
     if not book.metadata:
         return {}
-    root = SafeET.fromstring(book.metadata)
-    return {c.tag: c.text or "" for c in root if len(c) == 0}
+    root = metadata_root(book.metadata)
+    return {c.tag: c.text or "" for c in root if isinstance(c.tag, str) and len(c) == 0}
 
 
 def metadata_bytes(book, entries, updates=None, cover=None):
     if not book.metadata and not updates and cover is None:
         return None
+    if book.metadata and not updates and cover is None and tuple(e.original_index for e in entries if e.image) == book.original_order:
+        return book.metadata
     root = (
-        SafeET.fromstring(book.metadata) if book.metadata else ET.Element("ComicInfo")
+        metadata_root(book.metadata) if book.metadata else ET.Element("ComicInfo")
     )
     for tag, value in (updates or {}).items():
         child = root.find(tag)
@@ -275,6 +380,8 @@ def metadata_bytes(book, entries, updates=None, cover=None):
     }
     if pages is not None:
         for p in list(pages):
+            if p.tag != "Page":
+                continue
             try:
                 old = int(p.get("Image", "-1"))
             except ValueError:
@@ -333,6 +440,9 @@ def save(
     overwrite=False,
 ):
     target = Path(target)
+    check(cancel)
+    if not 72 <= dpi <= 600 or not 50 <= quality <= 100:
+        raise ValueError("DPI must be 72–600 and JPEG quality must be 50–100.")
     fmt = target.suffix.lower()
     if fmt not in {".cbz", ".cb7", ".pdf"}:
         raise ValueError("Output must be CBZ, CB7 or PDF.")
@@ -378,11 +488,12 @@ def save(
                         writer.add_page(PdfReader(buffer).pages[0])
                     if progress:
                         progress(i + 1, len(images), e.name)
-                values = updates or metadata_values(book)
+                values = metadata_values(book)
+                values.update(updates or {})
                 writer.add_metadata(
                     {
                         "/Title": values.get("Title") or target.stem,
-                        "/Creator": "Comic Utility 1.0",
+                        "/Creator": f"Comic Utility {VERSION}",
                     }
                 )
                 with temp.open("wb") as f:
@@ -424,8 +535,7 @@ def save(
                         rgb.close()
                     else:
                         if e.image:
-                            with Image.open(e.path) as image:
-                                image.verify()
+                            validate_image(e.path, cancel)
                         shutil.copyfile(e.path, p)
                     members.append((name, p))
                     if progress:
@@ -466,3 +576,49 @@ def save(
     finally:
         if temp.exists():
             temp.unlink()
+
+
+def extract(book, entries, selected, folder, dpi=150, quality=92, updates=None, cover=None,
+            preserve_folders=True, cancel=None, progress=None):
+    """Preflight the entire selection and roll back newly created files on failure."""
+    root = Path(folder).resolve()
+    outputs = []
+    names = set()
+    for e in selected:
+        name = safe_name(e.name) if preserve_folders else Path(e.name).name
+        out = root / name
+        resolved = out.resolve()
+        if not resolved.is_relative_to(root) or resolved == root:
+            raise ValueError(f"Unsafe extraction destination: {out}")
+        if str(resolved).casefold() in names:
+            raise ValueError(f"Selected filenames collide: {name}. Enable Preserve folders.")
+        names.add(str(resolved).casefold())
+        if out.exists() or out.is_symlink():
+            raise FileExistsError(f"Existing file will not be overwritten: {out}")
+        outputs.append((e, out))
+    created = []
+    try:
+        for i, (e, out) in enumerate(outputs):
+            check(cancel)
+            out.parent.mkdir(parents=True, exist_ok=True)
+            if not out.parent.resolve().is_relative_to(root):
+                raise ValueError("Extraction folder contains a link outside the destination.")
+            with out.open("xb") as f:
+                created.append(out)
+                if Path(e.name).name.casefold() == "comicinfo.xml":
+                    f.write(metadata_bytes(book, entries, updates, cover) or b"")
+                elif e.pdf:
+                    with image_of(e, dpi) as im:
+                        with display_image(im).convert("RGB") as rgb:
+                            rgb.save(f, "JPEG", quality=quality)
+                else:
+                    with e.path.open("rb") as src:
+                        copy_limited(src, f, MAX_ENTRY, cancel)
+            if progress:
+                progress(i + 1, len(outputs), f"Extracted {out.name}")
+        check(cancel)
+        return created
+    except BaseException:
+        for out in created:
+            out.unlink(missing_ok=True)
+        raise

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Comic Utility
+Comment=Convert comics and edit their pages
+Exec=AppRun %F
+Icon=io.github.edjenn1998.ComicUtility
+Terminal=false
+Categories=Graphics;
+MimeType=application/vnd.comicbook+zip;application/vnd.comicbook-rar;application/pdf;

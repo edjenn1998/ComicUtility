@@ -62,10 +62,12 @@ class GuiTests(unittest.TestCase):
             QFileDialog, "getOpenFileNames", return_value=([str(img)], "")
         ):
             w.add()
+        self.wait()
         self.assertEqual(len(w.entries), 4)
         w.list.setCurrentRow(0)
         with patch.object(QFileDialog, "getOpenFileName", return_value=(str(img), "")):
             w.replace()
+        self.wait()
         out = self.root / "saved.cbz"
         with patch.object(QFileDialog, "getSaveFileName", return_value=(str(out), "")):
             w.save_as()

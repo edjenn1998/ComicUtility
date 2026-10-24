@@ -1,8 +1,14 @@
 import sys
 from pathlib import Path
+from version import VERSION
+
+if "--version" in sys.argv:
+    print(f"Comic Utility {VERSION}")
+    raise SystemExit(0)
 
 if "--self-test" in sys.argv:
     import tempfile
+    import time
 
     from engine import Book, image_of, save
     from gui import STYLE, Window
@@ -40,6 +46,19 @@ if "--self-test" in sys.argv:
         assert window.cover is window.entries[0]
         window.undo()
         assert window.cover is None
+        deadline = time.monotonic() + 15
+        while window.preview_task and time.monotonic() < deadline:
+            app.processEvents()
+            time.sleep(0.005)
+        assert window.previewpix is not None, "GUI page preview did not finish"
+        window.redo()
+        assert window.cover is window.entries[0]
+        window.undo()
+        deadline = time.monotonic() + 15
+        while window.preview_task and time.monotonic() < deadline:
+            app.processEvents()
+            time.sleep(0.005)
+        assert window.previewpix is not None
         window.dirty = False
         if "--screenshot" in sys.argv:
             index = sys.argv.index("--screenshot")
@@ -54,7 +73,7 @@ if "--self-test" in sys.argv:
             assert (
                 sum(len(block) for entry in archive for block in entry.get_blocks()) > 0
             )
-    print("Comic Utility self-test passed: CBZ, CB7, PDF rendering and GUI editing")
+    print(f"Comic Utility {VERSION} self-test passed: CBZ, CB7, PDF rendering, async preview and GUI undo/redo")
     raise SystemExit(0)
 from gui import main
 

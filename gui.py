@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import io
-import shutil
 import sys
 import threading
+from collections import OrderedDict
 from pathlib import Path
 
 from engine import (
@@ -11,12 +11,16 @@ from engine import (
     IMAGES,
     Book,
     Cancelled,
+    Entry,
+    check,
+    display_image,
+    extract,
     image_of,
     metadata_values,
     save,
 )
 from PIL import Image
-from PySide6.QtCore import QSize, Qt, QThread, QTimer, Signal
+from PySide6.QtCore import QItemSelectionModel, QSettings, QSize, Qt, QThread, QTimer, Signal
 from PySide6.QtGui import QIcon, QKeySequence, QPixmap, QShortcut
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -35,6 +39,7 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QProgressBar,
+    QPlainTextEdit,
     QPushButton,
     QScrollArea,
     QSpinBox,
@@ -43,6 +48,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from version import VERSION
 
 STYLE = """
 QWidget {background:#151d2b;color:#e7edf7;font-size:14px;} QMainWindow {background:#151d2b;}
@@ -89,16 +95,62 @@ def button(text, fn, primary=False):
 
 def pixmap(im):
     buffer = io.BytesIO()
-    im.save(buffer, "PNG")
+    with display_image(im) as normalized:
+        normalized.save(buffer, "PNG")
     p = QPixmap()
     p.loadFromData(buffer.getvalue())
     return p
 
 
+class PreviewTask(QThread):
+    ready = Signal(object)
+    failed = Signal(object)
+
+    def __init__(self, key, entry, dpi, quality, output, fit):
+        super().__init__()
+        self.key, self.entry = key, entry
+        self.dpi, self.quality, self.output, self.fit = dpi, quality, output, fit
+        self.cancel = threading.Event()
+
+    def run(self):
+        try:
+            check(self.cancel)
+            with image_of(self.entry, self.dpi, self.fit) as original:
+                im = display_image(original)
+            try:
+                check(self.cancel)
+                if self.entry.pdf and self.output != "PDF":
+                    encoded = io.BytesIO()
+                    with im.convert("RGB") as rgb:
+                        rgb.save(encoded, "JPEG", quality=self.quality)
+                    im.close()
+                    encoded.seek(0)
+                    with Image.open(encoded) as decoded:
+                        im = decoded.copy()
+                size = im.size
+                data = io.BytesIO()
+                im.save(data, "PNG")
+                im.thumbnail((48, 64))
+                thumb = io.BytesIO()
+                im.save(thumb, "PNG")
+                check(self.cancel)
+                self.ready.emit((self.key, data.getvalue(), thumb.getvalue(), size))
+            finally:
+                im.close()
+        except Cancelled:
+            pass
+        except Exception as exc:
+            self.failed.emit((self.key, str(exc)))
+
+
 class Window(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Comic Utility 1.0")
+        self.setWindowTitle(f"Comic Utility {VERSION}")
+        icon_path = Path(getattr(sys, "_MEIPASS", Path(__file__).parent)) / "io.github.edjenn1998.ComicUtility.svg"
+        if not icon_path.exists():
+            icon_path = Path(__file__).parent / "packaging/appimage/io.github.edjenn1998.ComicUtility.svg"
+        self.setWindowIcon(QIcon(str(icon_path)))
         self.resize(1240, 820)
         self.setMinimumSize(980, 700)
         self.setAcceptDrops(True)
@@ -108,11 +160,18 @@ class Window(QMainWindow):
         self.cover = None
         self.dirty = False
         self.history = []
+        self.future = []
+        self.saved_state = None
         self.task = None
         self.previewpix = None
         self.fit = True
         self.queue = []
-        self.previewcache = {}
+        self.previewcache = OrderedDict()
+        self.preview_task = None
+        self.preview_request = None
+        self.preview_generation = 0
+        self.batch_results = []
+        self.settings = QSettings("edjenn1998", "ComicUtility")
         root = QWidget()
         outer = QVBoxLayout(root)
         outer.setContentsMargins(22, 18, 22, 16)
@@ -150,6 +209,18 @@ class Window(QMainWindow):
         QShortcut(QKeySequence("Ctrl+O"), self, activated=self.open_file)
         QShortcut(QKeySequence("Ctrl+Shift+S"), self, activated=self.save_as)
         QShortcut(QKeySequence("Ctrl+Z"), self, activated=self.undo)
+        QShortcut(QKeySequence("Ctrl+Shift+Z"), self, activated=self.redo)
+        QShortcut(QKeySequence("Ctrl+Y"), self, activated=self.redo)
+        geometry = self.settings.value("geometry")
+        if geometry:
+            self.restoreGeometry(geometry)
+        self.destination.setText(self.settings.value("destination", ""))
+        for name in ("dpi", "quality", "batchdpi", "batchquality"):
+            widget = getattr(self, name)
+            widget.setValue(int(self.settings.value(name, widget.value())))
+        for name in ("format", "batchformat"):
+            widget = getattr(self, name)
+            widget.setCurrentText(self.settings.value(name, widget.currentText()))
         self.editor.setEnabled(True)
         self.refresh()
 
@@ -180,19 +251,30 @@ class Window(QMainWindow):
         split.addWidget(left)
         actions = QHBoxLayout()
         actions.addWidget(button("Add…", self.add))
-        actions.addWidget(button("Remove", self.remove))
-        actions.addWidget(button("Replace…", self.replace))
+        self.removebtn = button("Remove", self.remove)
+        self.replacebtn = button("Replace…", self.replace)
+        actions.addWidget(self.removebtn)
+        actions.addWidget(self.replacebtn)
         ll.addLayout(actions)
         actions = QHBoxLayout()
         actions.addWidget(button("Move up", lambda: self.move(-1)))
         actions.addWidget(button("Move down", lambda: self.move(1)))
-        actions.addWidget(button("Make cover", self.make_cover))
+        self.coverbtn = button("Make cover", self.make_cover)
+        actions.addWidget(self.coverbtn)
         ll.addLayout(actions)
         actions = QHBoxLayout()
-        actions.addWidget(button("Undo", self.undo))
-        actions.addWidget(button("Extract…", self.extract))
+        self.undobtn = button("Undo", self.undo)
+        self.redobtn = button("Redo", self.redo)
+        self.extractbtn = button("Extract…", self.extract)
+        actions.addWidget(self.undobtn)
+        actions.addWidget(self.redobtn)
+        actions.addWidget(self.extractbtn)
         actions.addWidget(button("Metadata…", self.metadata))
         ll.addLayout(actions)
+        self.preserve_folders = QCheckBox("Preserve folders when extracting")
+        self.preserve_folders.setChecked(True)
+        ll.addWidget(self.preserve_folders)
+        self.list.itemSelectionChanged.connect(self.update_actions)
         right = QWidget()
         rl = QVBoxLayout(right)
         rl.setContentsMargins(0, 0, 0, 0)
@@ -218,13 +300,17 @@ class Window(QMainWindow):
         self.format = QComboBox()
         self.format.addItems(["CBZ", "PDF", "CB7"])
         options.addWidget(self.format)
-        options.addWidget(QLabel("PDF render DPI"))
+        dpi_label = QLabel("DPI")
+        dpi_label.setToolTip("PDF render resolution / physical size of image pages in PDF output")
+        options.addWidget(dpi_label)
         self.dpi = QSpinBox()
         self.dpi.setRange(72, 600)
         self.dpi.setValue(150)
         self.dpi.valueChanged.connect(self.preview)
         options.addWidget(self.dpi)
-        options.addWidget(QLabel("PDF → archive JPEG quality"))
+        quality_label = QLabel("JPEG quality")
+        quality_label.setToolTip("JPEG quality for PDF pages rendered to CBZ/CB7")
+        options.addWidget(quality_label)
         self.quality = QSpinBox()
         self.quality.setRange(50, 100)
         self.quality.setValue(92)
@@ -284,6 +370,11 @@ class Window(QMainWindow):
         row.addStretch()
         row.addWidget(button("Convert batch", self.batch_run, True))
         layout.addLayout(row)
+        results = QHBoxLayout()
+        results.addWidget(button("Copy results", self.copy_results))
+        results.addWidget(button("Export results…", self.export_results))
+        results.addStretch()
+        layout.addLayout(results)
         hint = QLabel(
             "Existing outputs are skipped. Each result shows its full destination. Cancellation keeps completed outputs and leaves the current comic uncommitted."
         )
@@ -297,6 +388,7 @@ class Window(QMainWindow):
     def run(self, fn, success, message):
         if self.task:
             return
+        self.stop_preview()
         self.status.setText(message)
         self.tabs.setEnabled(False)
         self.cancelbtn.setEnabled(True)
@@ -319,11 +411,15 @@ class Window(QMainWindow):
             self.progress.setRange(0, 0)
 
     def task_result(self, result):
-        self._success(result)
+        try:
+            self._success(result)
+        except Exception as exc:
+            self.error(str(exc))
 
     def task_failed(self, msg):
         self.status.setText(msg)
-        self.error(msg)
+        if not (self.task and self.task.cancel.is_set()):
+            self.error(msg)
 
     def task_finished(self):
         self.tabs.setEnabled(True)
@@ -332,6 +428,8 @@ class Window(QMainWindow):
         self.progress.setValue(100)
         self.task.deleteLater()
         self.task = None
+        self.update_actions()
+        self.preview()
 
     def cancel(self):
         if self.task:
@@ -358,6 +456,7 @@ class Window(QMainWindow):
         book = Book()
         book.source = Path.home() / "Untitled.cbz"
         self.loaded(book)
+        self.saved_state = None
         self.dirty = True
         self.refresh()
         self.status.setText("New comic • add images to begin.")
@@ -385,6 +484,7 @@ class Window(QMainWindow):
         self.run(lambda c, pr: Book.load(p, c, pr), self.loaded, "Opening comic…")
 
     def loaded(self, book):
+        self.stop_preview()
         if self.book:
             self.book.close()
         self.book = book
@@ -393,7 +493,10 @@ class Window(QMainWindow):
         self.cover = None
         self.dirty = False
         self.history = []
-        self.previewcache = {}
+        self.future = []
+        self.previewcache.clear()
+        self.preview_generation += 1
+        self.saved_state = self.snapshot()
         self.name.setText(book.source.name)
         self.refresh()
         self.status.setText(
@@ -401,14 +504,42 @@ class Window(QMainWindow):
         )
 
     def remember(self):
-        self.history.append(
-            (list(self.entries), dict(self.updates), self.cover, self.book.metadata)
-        )
+        self.history.append(self.snapshot())
         self.history = self.history[-30:]
+        self.future = []
         self.dirty = True
+
+    @property
+    def entries(self):
+        return self.book.entries if self.book else self._empty_entries
+
+    @entries.setter
+    def entries(self, value):
+        if self.book:
+            self.book.entries = value
+        else:
+            self._empty_entries = value
+
+    def snapshot(self):
+        return (list(self.entries), dict(self.updates), self.cover,
+                self.book.metadata if self.book else None)
+
+    def update_actions(self):
+        current = self.current()
+        chosen = bool(self.selected())
+        self.removebtn.setEnabled(chosen)
+        self.extractbtn.setEnabled(chosen)
+        self.replacebtn.setEnabled(bool(current and current.image))
+        self.coverbtn.setEnabled(bool(current and current.image))
+        self.undobtn.setEnabled(bool(self.history))
+        self.redobtn.setEnabled(bool(self.future))
 
     def refresh(self, *args):
         selected = self.current()
+        selection = {id(e) for e in self.selected()}
+        if self.book:
+            self.dirty = self.snapshot() != self.saved_state
+            self.prune_workspace()
         self.list.blockSignals(True)
         self.list.clear()
         for e in self.entries:
@@ -421,13 +552,15 @@ class Window(QMainWindow):
             if id(e) in self.previewcache:
                 item.setIcon(self.previewcache[id(e)])
             if e is selected:
-                self.list.setCurrentItem(item)
+                self.list.setCurrentItem(item, QItemSelectionModel.SelectionFlag.NoUpdate)
+            item.setSelected(id(e) in selection)
         self.list.blockSignals(False)
         if self.list.currentRow() < 0 and self.list.count():
             self.list.setCurrentRow(0)
         else:
             self.preview()
         self.savebtn.setEnabled(bool(self.book))
+        self.update_actions()
         self.name.setText(
             (self.book.source.name if self.book else "No comic open")
             + (" • unsaved edits" if self.dirty else "")
@@ -440,9 +573,24 @@ class Window(QMainWindow):
     def selected(self):
         return [i.data(Qt.ItemDataRole.UserRole) for i in self.list.selectedItems()]
 
+    def stop_preview(self):
+        self.preview_request = None
+        if self.preview_task:
+            task = self.preview_task
+            task.cancel.set()
+            task.wait()
+            task.ready.disconnect()
+            task.failed.disconnect()
+            task.finished.disconnect()
+            task.deleteLater()
+            self.preview_task = None
+
     def preview(self, *args):
         e = self.current()
+        self.update_actions()
         self.previewpix = None
+        self.image.setMinimumSize(1, 1)
+        self.preview_request = None
         if not e:
             self.image.setText("Open a comic or add images to begin.")
             self.pageinfo.setText("Page preview")
@@ -453,35 +601,66 @@ class Window(QMainWindow):
             )
             self.pageinfo.setText(e.name)
             return
-        try:
-            im = image_of(e, self.dpi.value(), self.fit)
-            if e.pdf and self.format.currentText() != "PDF":
-                rgb = Image.new("RGB", im.size, "white")
-                rgb.paste(im, mask=im.getchannel("A") if "A" in im.getbands() else None)
-                encoded = io.BytesIO()
-                rgb.save(encoded, "JPEG", quality=self.quality.value())
-                im.close()
-                rgb.close()
-                encoded.seek(0)
-                with Image.open(encoded) as decoded:
-                    im = decoded.copy()
-            self.previewpix = pixmap(im)
-            detail = (
-                f" • {self.dpi.value()} DPI / JPEG {self.quality.value()}"
-                if e.pdf and self.format.currentText() != "PDF"
-                else ""
-            )
-            self.pageinfo.setText(
-                f"{e.name} • preview {im.width} × {im.height}{detail}"
-            )
-            im.close()
-            icon = QIcon(self.previewpix)
-            self.previewcache[id(e)] = icon
-            self.list.currentItem().setIcon(icon)
-            self.show_preview()
-        except Exception as exc:
-            self.image.setText(f"Preview unavailable\n{exc}")
-            self.pageinfo.setText(e.name)
+        if self.task:
+            return
+        key = (self.preview_generation, id(e), self.dpi.value(), self.quality.value(),
+               self.format.currentText(), self.fit)
+        self.preview_request = (key, e)
+        self.image.setText("Loading preview…")
+        self.pageinfo.setText(e.name)
+        if self.preview_task:
+            self.preview_task.cancel.set()
+        else:
+            self.start_preview()
+
+    def start_preview(self):
+        if not self.preview_request:
+            return
+        key, e = self.preview_request
+        task = PreviewTask(key, e, key[2], key[3], key[4], key[5])
+        self.preview_task = task
+        task.ready.connect(self.preview_ready)
+        task.failed.connect(self.preview_failed)
+        task.finished.connect(self.preview_finished)
+        task.start()
+
+    def preview_ready(self, result):
+        key, data, thumb, size = result
+        if self.sender() is not self.preview_task or not self.preview_request or key != self.preview_request[0]:
+            return
+        self.previewpix = QPixmap()
+        self.previewpix.loadFromData(data)
+        small = QPixmap()
+        small.loadFromData(thumb)
+        icon = QIcon(small)
+        self.previewcache[key[1]] = icon
+        self.previewcache.move_to_end(key[1])
+        while len(self.previewcache) > 256:
+            old, _ = self.previewcache.popitem(last=False)
+            for i in range(self.list.count()):
+                item = self.list.item(i)
+                if id(item.data(Qt.ItemDataRole.UserRole)) == old:
+                    item.setIcon(QIcon())
+                    break
+        self.list.currentItem().setIcon(icon)
+        e = self.current()
+        detail = f" • {key[2]} DPI / JPEG {key[3]}" if e.pdf and key[4] != "PDF" else ""
+        self.pageinfo.setText(f"{e.name} • preview {size[0]} × {size[1]}{detail}")
+        self.show_preview()
+
+    def preview_failed(self, result):
+        key, message = result
+        if self.sender() is self.preview_task and self.preview_request and key == self.preview_request[0]:
+            self.image.setText(f"Preview unavailable\n{message}")
+
+    def preview_finished(self):
+        task = self.preview_task
+        if self.sender() is not task or task is None:
+            return
+        self.preview_task = None
+        task.deleteLater()
+        if self.preview_request and (task.cancel.is_set() or task.key != self.preview_request[0]):
+            self.start_preview()
 
     def show_preview(self):
         if self.previewpix:
@@ -524,19 +703,40 @@ class Window(QMainWindow):
         )
         if not paths:
             return
-        try:
-            added = self.book.add(paths)
-            if any(Path(e.name).name.casefold() == "comicinfo.xml" for e in added):
-                raise ValueError(
-                    "Use Metadata to edit ComicInfo.xml; adding a second metadata file is not supported."
-                )
+        self.add_paths(paths)
+
+    def add_paths(self, paths, replace=None):
+        if self.task:
+            return
+        self.stop_preview()
+        self.prune_workspace()
+        current = self.current()
+
+        def done(added):
             self.remember()
-            current = self.current()
-            at = self.entries.index(current) + 1 if current else len(self.entries)
-            self.entries[at:at] = added
+            if replace:
+                new = added[0]
+                new.original_index = replace.original_index
+                self.entries[self.entries.index(replace)] = new
+                if self.cover is replace:
+                    self.cover = new
+            else:
+                at = self.entries.index(current) + 1 if current else len(self.entries)
+                self.entries[at:at] = added
+            self.prune_workspace()
             self.refresh()
-        except Exception as exc:
-            self.error(str(exc))
+
+        self.run(lambda c, pr: self.book.add(paths, c, pr), done, "Adding and validating files…")
+
+    def prune_workspace(self):
+        retained = list(self.entries)
+        for state in self.history + self.future:
+            retained.extend(state[0])
+        self.book.prune(retained)
+        keep = {id(e) for e in retained}
+        for key in list(self.previewcache):
+            if key not in keep:
+                self.previewcache.pop(key)
 
     def remove(self):
         chosen = self.selected()
@@ -546,12 +746,15 @@ class Window(QMainWindow):
             self.error("Keep at least one comic page.")
             return
         self.remember()
+        self.stop_preview()
         self.entries = [e for e in self.entries if e not in chosen]
         if self.cover in chosen:
             self.cover = None
         if any(Path(e.name).name.casefold() == "comicinfo.xml" for e in chosen):
             self.book.metadata = None
             self.updates = {}
+            self.cover = None
+        self.prune_workspace()
         self.refresh()
 
     def replace(self):
@@ -565,16 +768,7 @@ class Window(QMainWindow):
             "Images (*.jpg *.jpeg *.png *.webp *.gif *.bmp *.tif *.tiff *.avif)",
         )
         if p:
-            try:
-                new = self.book.add([p])[0]
-                new.original_index = e.original_index
-                self.remember()
-                self.entries[self.entries.index(e)] = new
-                if self.cover is e:
-                    self.cover = new
-                self.refresh()
-            except Exception as exc:
-                self.error(str(exc))
+            self.add_paths([p], replace=e)
 
     def move(self, direction):
         chosen = self.selected()
@@ -606,17 +800,29 @@ class Window(QMainWindow):
             self.entries.remove(e)
             self.entries.insert(0, e)
             self.cover = e
+            if not any(Path(item.name).name.casefold() == "comicinfo.xml" for item in self.entries):
+                self.entries.append(Entry("ComicInfo.xml"))
             self.refresh()
 
     def undo(self):
         if self.task:
             return
         if self.history:
+            self.stop_preview()
+            self.future.append(self.snapshot())
             self.entries, self.updates, self.cover, self.book.metadata = (
                 self.history.pop()
             )
             self.dirty = True
             self.refresh()
+
+    def redo(self):
+        if self.task or not self.future:
+            return
+        self.stop_preview()
+        self.history.append(self.snapshot())
+        self.entries, self.updates, self.cover, self.book.metadata = self.future.pop()
+        self.refresh()
 
     def metadata(self):
         if not self.book:
@@ -650,7 +856,9 @@ class Window(QMainWindow):
             "Genre",
             "Summary",
         ]:
-            entry = QLineEdit(values.get(name, ""))
+            entry = QPlainTextEdit(values.get(name, "")) if name == "Summary" else QLineEdit(values.get(name, ""))
+            if name == "Summary":
+                entry.setMaximumHeight(100)
             fields[name] = entry
             form.addRow(name, entry)
         layout.addLayout(form)
@@ -667,8 +875,15 @@ class Window(QMainWindow):
         buttons.rejected.connect(dialog.reject)
         layout.addWidget(buttons)
         if dialog.exec():
+            updates = {n: (w.toPlainText() if isinstance(w, QPlainTextEdit) else w.text())
+                       for n, w in fields.items()}
+            updates = {n: text for n, text in updates.items() if text != metadata_values(self.book).get(n, "")}
+            if updates == self.updates:
+                return
             self.remember()
-            self.updates = {n: w.text() for n, w in fields.items()}
+            self.updates = updates
+            if not any(Path(e.name).name.casefold() == "comicinfo.xml" for e in self.entries):
+                self.entries.append(Entry("ComicInfo.xml"))
             self.refresh()
 
     def extract(self):
@@ -681,35 +896,13 @@ class Window(QMainWindow):
         if not folder:
             return
         dpi = self.dpi.value()
+        quality = self.quality.value()
+        preserve = self.preserve_folders.isChecked()
+        entries, updates, cover = list(self.entries), dict(self.updates), self.cover
 
         def job(cancel, progress):
-            from engine import check
-
-            outputs = []
-            for i, e in enumerate(selected):
-                check(cancel)
-                out = Path(folder) / Path(e.name).name
-                if out.exists():
-                    raise FileExistsError(
-                        f"Existing file will not be overwritten: {out}"
-                    )
-                # Exclusive creation prevents race-time overwrites.
-                with out.open("xb") as f:
-                    try:
-                        if e.pdf:
-                            im = image_of(e, dpi)
-                            im.convert("RGB").save(f, "JPEG", quality=92)
-                            im.close()
-                        else:
-                            with e.path.open("rb") as src:
-                                shutil.copyfileobj(src, f)
-                    except BaseException:
-                        f.close()
-                        out.unlink(missing_ok=True)
-                        raise
-                outputs.append(out)
-                progress(i + 1, len(selected), f"Extracted {out.name}")
-            return outputs
+            return extract(self.book, entries, selected, folder, dpi, quality, updates,
+                           cover, preserve, cancel, progress)
 
         self.run(
             job,
@@ -722,6 +915,8 @@ class Window(QMainWindow):
             return
         fmt = self.format.currentText().lower()
         suggested = self.book.source.with_name(self.book.source.stem + "-edited." + fmt)
+        if self.settings.value("save_folder"):
+            suggested = Path(self.settings.value("save_folder")) / suggested.name
         p, _ = QFileDialog.getSaveFileName(
             self,
             "Save comic as",
@@ -760,8 +955,10 @@ class Window(QMainWindow):
         )
 
     def saved(self, p):
+        self.book.source = Path(p)
+        self.saved_state = self.snapshot()
         self.dirty = False
-        self.history = []
+        self.settings.setValue("save_folder", str(Path(p).parent))
         self.refresh()
         self.status.setText(f"Saved and verified: {p}")
 
@@ -784,6 +981,7 @@ class Window(QMainWindow):
             )
 
     def enqueue(self, paths):
+        self.batch_results = []
         for p in paths:
             p = str(Path(p).resolve())
             if p not in self.queue:
@@ -800,7 +998,27 @@ class Window(QMainWindow):
 
     def batch_clear(self):
         self.queue = []
+        self.batch_results = []
         self.batchlist.clear()
+
+    def results_text(self):
+        return "\n\n".join(f"{path}\n{message}" for path, message in self.batch_results)
+
+    def copy_results(self):
+        QApplication.clipboard().setText(self.results_text())
+        self.status.setText("Batch results copied to the clipboard.")
+
+    def export_results(self):
+        if not self.batch_results:
+            self.error("Run a batch first to create results.")
+            return
+        p, _ = QFileDialog.getSaveFileName(self, "Export batch results", "comic-results.txt", "Text (*.txt)")
+        if p:
+            try:
+                Path(p).write_text(self.results_text() + "\n", encoding="utf-8")
+                self.status.setText(f"Results exported to {p}")
+            except OSError as exc:
+                self.error(str(exc))
 
     def choose_destination(self):
         p = QFileDialog.getExistingDirectory(self, "Choose output folder")
@@ -825,7 +1043,7 @@ class Window(QMainWindow):
             results = []
             for i, path in enumerate(paths):
                 if cancel.is_set():
-                    results.append((i, "Cancelled before starting"))
+                    results.extend((j, "Cancelled before starting") for j in range(i, len(paths)))
                     break
                 out = destination / (Path(path).stem + "." + fmt)
                 book = None
@@ -862,6 +1080,7 @@ class Window(QMainWindow):
                         )
                     )
                     if isinstance(exc, Cancelled):
+                        results.extend((j, "Cancelled before starting") for j in range(i + 1, len(paths)))
                         break
                 finally:
                     if book:
@@ -869,11 +1088,12 @@ class Window(QMainWindow):
             return results
 
         def done(results):
+            self.batch_results = [(paths[i], message) for i, message in results]
             for i, message in results:
                 self.batchlist.item(i).setText(f"{paths[i]}\n{message}")
-            self.status.setText(
-                f"Batch finished • {sum(m.startswith('Saved') for _, m in results)} saved • see results above."
-            )
+            counts = [f"{sum(m.startswith(label) for _, m in results)} {label.lower()}"
+                      for label in ("Saved", "Skipped", "Failed", "Cancelled")]
+            self.status.setText("Batch finished • " + " • ".join(counts))
 
         self.run(job, done, "Starting batch conversion…")
 
@@ -882,6 +1102,8 @@ class Window(QMainWindow):
             event.acceptProposedAction()
 
     def dropEvent(self, event):
+        if self.task:
+            return
         paths = [u.toLocalFile() for u in event.mimeData().urls() if u.isLocalFile()]
         if self.tabs.currentIndex() == 1:
             self.enqueue([p for p in paths if Path(p).suffix.lower() in FORMATS])
@@ -889,13 +1111,7 @@ class Window(QMainWindow):
             if not self.book:
                 self.new_book()
             if self.book:
-                try:
-                    added = self.book.add(paths)
-                    self.remember()
-                    self.entries.extend(added)
-                    self.refresh()
-                except Exception as exc:
-                    self.error(str(exc))
+                self.add_paths(paths)
         elif paths:
             self.load(paths[0])
 
@@ -909,6 +1125,13 @@ class Window(QMainWindow):
         if not self.confirm_discard():
             event.ignore()
             return
+        self.stop_preview()
+        self.settings.setValue("geometry", self.saveGeometry())
+        self.settings.setValue("destination", self.destination.text())
+        for name in ("dpi", "quality", "batchdpi", "batchquality"):
+            self.settings.setValue(name, getattr(self, name).value())
+        for name in ("format", "batchformat"):
+            self.settings.setValue(name, getattr(self, name).currentText())
         if self.book:
             self.book.close()
         event.accept()

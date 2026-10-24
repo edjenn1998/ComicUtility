@@ -1,0 +1,50 @@
+name: Tests and AppImage
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test-build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    env:
+      QT_QPA_PLATFORM: offscreen
+      PYTHONDONTWRITEBYTECODE: '1'
+      XDG_CONFIG_HOME: /tmp/comic-test-config
+      COMIC_BUILD_ROOT: /tmp/comic-release-build
+      COMIC_PYTHON: python
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.15'
+          cache: pip
+          cache-dependency-path: 'requirements*.txt'
+      - name: Install native libraries and build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libarchive13 libegl1 libgl1 libxcb-cursor0 libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-xinerama0 libxcb-xkb1 binutils desktop-file-utils xvfb xauth
+      - name: Install pinned Python dependencies
+        run: python -m pip install -r requirements-build.txt
+      - name: Check code and desktop entry
+        run: |
+          ruff check .
+          desktop-file-validate packaging/appimage/io.github.edjenn1998.ComicUtility.desktop
+          bash -n build.sh packaging/appimage/build-appimage.sh
+          python -m pip check
+      - name: Regression tests and GUI self-test
+        run: |
+          python -m unittest discover -s tests -v
+          python launch.py --self-test
+      - name: Build and test AppImage
+        run: bash packaging/appimage/build-appimage.sh
+      - name: Test packaged X11 GUI without FUSE
+        run: QT_QPA_PLATFORM=xcb xvfb-run -a ./dist/ComicUtility-1.1.0-x86_64.AppImage --appimage-extract-and-run --self-test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ComicUtility-Linux-x86_64
+          path: dist/
+          if-no-files-found: error
+          retention-days: 30
